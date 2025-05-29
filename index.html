@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced Color Picker</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- 左側：画像エリア -->
+      <div class="panel image-panel">
+        <!-- バツボタンを追加 -->
+        <button id="clearImageBtn" class="close-image-btn hidden">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="drop-area" id="dropArea">
+          <div class="drop-message" id="dropMessage">
+            <i class="fa-regular fa-image"></i>
+            <p>Drag & Drop or Paste an Image</p>
+          </div>
+          <img
+            id="uploadedImage"
+            class="uploaded-image hidden"
+            draggable="false"
+          />
+          <!-- 拡大表示とカラー情報を表示するブロック -->
+          <div id="magnifier" class="magnifier">
+            <div class="magnifier-content">
+              <div class="magnifier-zoom"></div>
+              <div class="magnifier-info">
+                <div class="magnifier-color-preview"></div>
+                <div class="magnifier-color-code">
+                  <div class="magnifier-hex"></div>
+                  <div class="magnifier-rgb"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="color-palette">
+          <div id="paletteContainer" class="palette-container"></div>
+        </div>
+        <div class="value-group">
+          <div id="colorHistory" class="color-history"></div>
+        </div>
+      </div>
+
+      <!-- 右側：カラー情報エリア（4つの島に分割） -->
+      <div class="color-info-container">
+        <!-- カラープレビュー島 -->
+        <div class="panel color-preview-panel">
+          <div class="color-display">
+            <div class="color-box">
+              <div class="color-preview" id="currentColor"></div>
+              <input type="color" id="colorPicker" class="color-picker-input" />
+            </div>
+            <div class="color-box">
+              <div class="color-preview-before" id="previousColor"></div>
+            </div>
+          </div>
+
+          <div class="value-group">
+            <label for="hexValue">HEX</label>
+            <div class="input-with-copy">
+              <input
+                type="text"
+                id="hexValue"
+                maxlength="7"
+                placeholder="#000000"
+              />
+              <button
+                class="copy-btn"
+                data-copy="hex-with-hash"
+                title="Copy HEX without #"
+              >
+                <i class="fa-regular fa-clipboard"></i>
+              </button>
+              <button
+                class="copy-btn"
+                data-copy="hex-without-hash"
+                title="Copy HEX with #"
+              >
+                <i class="fas fa-hashtag"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RGB島 -->
+        <div class="panel rgb-panel">
+          <div class="color-input-row">
+            <span class="color-label">R</span>
+            <input
+              type="range"
+              id="rSlider"
+              min="0"
+              max="255"
+              value="0"
+              class="slider r-slider"
+            />
+            <input
+              type="number"
+              id="rValue"
+              min="0"
+              max="255"
+              value="0"
+              class="color-number-input"
+            />
+            <button class="copy-btn" data-copy="r-value" title="Copy R value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <div class="color-input-row">
+            <span class="color-label">G</span>
+            <input
+              type="range"
+              id="gSlider"
+              min="0"
+              max="255"
+              value="0"
+              class="slider g-slider"
+            />
+            <input
+              type="number"
+              id="gValue"
+              min="0"
+              max="255"
+              value="0"
+              class="color-number-input"
+            />
+            <button class="copy-btn" data-copy="g-value" title="Copy G value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <div class="color-input-row">
+            <span class="color-label">B</span>
+            <input
+              type="range"
+              id="bSlider"
+              min="0"
+              max="255"
+              value="0"
+              class="slider b-slider"
+            />
+            <input
+              type="number"
+              id="bValue"
+              min="0"
+              max="255"
+              value="0"
+              class="color-number-input"
+            />
+            <button class="copy-btn" data-copy="b-value" title="Copy B value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <div class="input-with-copy rgb-full">
+            <input
+              type="text"
+              id="rgbValue"
+              readonly
+              placeholder="rgb(0, 0, 0)"
+            />
+            <button class="copy-btn" data-copy="rgb-value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- HSL島 -->
+        <div class="panel hsl-panel">
+          <div class="color-input-row">
+            <span class="color-label">H</span>
+            <input
+              type="range"
+              id="hSlider"
+              min="0"
+              max="359"
+              value="0"
+              class="slider h-slider"
+            />
+            <input
+              type="number"
+              id="hValue"
+              min="0"
+              max="359"
+              value="0"
+              class="color-number-input"
+            />
+            <button class="copy-btn" data-copy="h-value" title="Copy H value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <div class="color-input-row">
+            <span class="color-label">S</span>
+            <input
+              type="range"
+              id="sSlider"
+              min="0"
+              max="100"
+              value="0"
+              class="slider s-slider"
+            />
+            <input
+              type="number"
+              id="sValue"
+              min="0"
+              max="100"
+              value="0"
+              class="color-number-input"
+            />
+            <button class="copy-btn" data-copy="s-value" title="Copy S value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <div class="color-input-row">
+            <span class="color-label">L</span>
+            <input
+              type="range"
+              id="lSlider"
+              min="0"
+              max="100"
+              value="0"
+              class="slider l-slider"
+            />
+            <input
+              type="number"
+              id="lValue"
+              min="0"
+              max="100"
+              value="0"
+              class="color-number-input"
+            />
+            <button class="copy-btn" data-copy="l-value" title="Copy L value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <div class="input-with-copy">
+            <input
+              type="text"
+              id="hslValue"
+              readonly
+              placeholder="hsl(0, 0%, 0%)"
+            />
+            <button class="copy-btn" data-copy="hsl-value" title="Copy HSL">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- HSV島 -->
+        <div class="panel hsv-panel">
+          <div class="color-input-row">
+            <span class="color-label">H</span>
+            <input
+              type="range"
+              id="hvSlider"
+              min="0"
+              max="359"
+              value="0"
+              class="slider hv-slider"
+            />
+            <input
+              type="number"
+              id="hvValue"
+              min="0"
+              max="359"
+              value="0"
+              class="color-number-input"
+            />
+            <button class="copy-btn" data-copy="hv-value" title="Copy H value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <div class="color-input-row">
+            <span class="color-label">S</span>
+            <input
+              type="range"
+              id="svSlider"
+              min="0"
+              max="100"
+              value="0"
+              class="slider sv-slider"
+            />
+            <input
+              type="number"
+              id="svValue"
+              min="0"
+              max="100"
+              value="0"
+              class="color-number-input"
+            />
+            <button class="copy-btn" data-copy="sv-value" title="Copy S value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <div class="color-input-row">
+            <span class="color-label">V</span>
+            <input
+              type="range"
+              id="vSlider"
+              min="0"
+              max="100"
+              value="0"
+              class="slider v-slider"
+            />
+            <input
+              type="number"
+              id="vValue"
+              min="0"
+              max="100"
+              value="0"
+              class="color-number-input"
+            />
+            <button class="copy-btn" data-copy="v-value" title="Copy V value">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <div class="input-with-copy">
+            <input
+              type="text"
+              id="hsvValue"
+              readonly
+              placeholder="hsv(0, 0%, 0%)"
+            />
+            <button class="copy-btn" data-copy="hsv-value" title="Copy HSV">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 下側：履歴エリア -->
+      <div class="panel history-panel">
+        <div id="imageHistory" class="image-history"></div>
+        <div class="panel-footer">
+          <button id="clearHistoryBtn" class="btn">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 通知 -->
+    <div id="notification" class="notification hidden">
+      <span id="notificationText"></span>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

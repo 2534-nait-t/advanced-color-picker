@@ -1,0 +1,673 @@
+:root {
+	--panel-bg: rgba(255, 255, 255, 0.95);
+	--panel-border-radius: 16px;
+	--panel-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+	--input-bg: #f5f5f7;
+	--input-border: 1px solid #e0e0e0;
+	--input-border-radius: 8px;
+	--btn-primary: #ffffff;
+	--btn-hover: rgba(255, 0, 0, 0.8);
+	--text-primary: #333;
+	--text-secondary: #666;
+	--accent-color: #007aff;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+		Arial, sans-serif;
+}
+
+body {
+	background-color: #f5f5f7;
+	color: var(--text-primary);
+	line-height: 1.6;
+	padding: 20px;
+	min-height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.app-container {
+	display: grid;
+	grid-template-columns: 7fr 3fr;
+	grid-template-rows: auto auto;
+	grid-gap: 20px;
+	max-width: 1200px;
+	width: 100%;
+}
+
+.panel {
+	background-color: var(--panel-bg);
+	border-radius: var(--panel-border-radius);
+	box-shadow: var(--panel-shadow);
+	padding: 20px;
+	overflow: visible;
+}
+
+.image-panel {
+	grid-column: 1;
+	grid-row: 1;
+	position: relative;
+}
+
+/* 右側のカラー情報コンテナ */
+.color-info-container {
+	grid-column: 2;
+	grid-row: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+}
+
+/* 各島のパネル */
+.color-preview-panel,
+.rgb-panel,
+.hsl-panel,
+.hsv-panel {
+	background-color: var(--panel-bg);
+	border-radius: var(--panel-border-radius);
+	box-shadow: var(--panel-shadow);
+	padding: 15px;
+}
+
+.history-panel {
+	grid-column: 1 / 3;
+	grid-row: 2;
+}
+
+/* パネルタイトル */
+.panel-title {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-primary);
+	margin-bottom: 15px;
+	text-align: center;
+}
+
+/* ドロップエリア */
+.drop-area {
+	position: relative;
+	min-height: 300px;
+	border: 2px dashed #ccc;
+	border-radius: 12px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+	cursor: pointer;
+	transition: all 0.3s ease;
+}
+
+.drop-area.active {
+	border-color: var(--accent-color);
+	background-color: rgba(0, 122, 255, 0.05);
+}
+
+.drop-area.picker-mode {
+	cursor: crosshair !important;
+}
+
+.drop-area.has-image {
+	border: none;
+	border-radius: 0 !important;
+	cursor: crosshair;
+}
+
+.drop-message {
+	text-align: center;
+	color: var(--text-secondary);
+}
+
+.drop-message i {
+	font-size: 48px;
+	margin-bottom: 10px;
+	color: #ccc;
+}
+
+.uploaded-image {
+	max-width: 100%;
+	max-height: 100%;
+	border-radius: 0 !important;
+	-webkit-user-drag: none;
+	object-fit: contain;
+}
+
+.hidden {
+	display: none !important;
+}
+
+/* マグニファイア */
+.magnifier {
+	position: fixed;
+	width: 250px;
+	height: 120px;
+	border-radius: 12px;
+	border: 2px solid white;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+	pointer-events: none;
+	z-index: 1000;
+	background-color: rgba(255, 255, 255, 0.95);
+	display: none;
+	overflow: hidden;
+}
+
+.magnifier-content {
+	display: flex;
+	width: 100%;
+	height: 100%;
+}
+
+.magnifier-zoom {
+	width: 120px;
+	height: 120px;
+	background-repeat: no-repeat;
+	border-right: 1px solid rgba(0, 0, 0, 0.1);
+	position: relative;
+	overflow: hidden;
+}
+
+/* 7x7グリッドの基本線 */
+.magnifier-zoom::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 120px;
+	height: 120px;
+	background-image: linear-gradient(
+			to right,
+			rgba(128, 128, 128, 0.4) 1px,
+			transparent 1px
+		), linear-gradient(to bottom, rgba(128, 128, 128, 0.4) 1px, transparent 1px);
+	background-size: 17.14px 17.14px; /* 120px ÷ 7 ≈ 17.14px */
+	pointer-events: none;
+	z-index: 5;
+}
+
+/* 中央セル(4,4)の赤い枠線 */
+.magnifier-zoom::after {
+	content: "";
+	position: absolute;
+	top: 51.42px; /* 3 × 17.14px ≈ 51.42px */
+	left: 51.42px; /* 3 × 17.14px ≈ 51.42px */
+	width: 17.14px; /* 1セルの幅 */
+	height: 17.14px; /* 1セルの高さ */
+	border: 2px solid rgba(255, 0, 0, 0.9);
+	background-color: rgba(255, 0, 0, 0.1);
+	box-sizing: border-box;
+	pointer-events: none;
+	z-index: 10;
+}
+
+.magnifier-info {
+	flex: 1;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.magnifier-color-preview {
+	width: 40px;
+	height: 40px;
+	border-radius: 6px;
+	margin: 0 auto 8px;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.magnifier-color-code {
+	text-align: center;
+	font-size: 12px;
+	color: var(--text-primary);
+}
+
+.magnifier-hex {
+	font-weight: bold;
+	margin-bottom: 4px;
+}
+
+.magnifier-rgb {
+	font-size: 11px;
+	color: var(--text-secondary);
+}
+/* カラー表示 */
+.color-display {
+	display: flex;
+	gap: 15px;
+	margin-bottom: 15px;
+}
+
+.color-box {
+	flex: 1;
+	text-align: center;
+}
+
+.color-preview,
+.color-preview-before {
+	height: 60px;
+	border-radius: 12px;
+	margin-bottom: 8px;
+	background-color: #000;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	cursor: pointer;
+	transition: transform 0.2s;
+	position: relative;
+}
+
+.color-preview:hover {
+	transform: scale(1.05);
+}
+
+.color-label {
+	font-size: 12px;
+	color: var(--text-secondary);
+}
+
+/* カラー値入力 */
+.value-group {
+	margin-bottom: 8px;
+}
+
+.value-group label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: var(--text-secondary);
+	font-size: 14px;
+}
+
+.input-with-copy {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.input-with-copy input {
+	flex: 1;
+	padding: 8px 12px;
+	border: var(--input-border);
+	border-radius: var(--input-border-radius);
+	background-color: var(--input-bg);
+	font-size: 14px;
+}
+
+.copy-btn {
+	background: none;
+	border: none;
+	color: var(--text-secondary);
+	cursor: pointer;
+	padding: 6px;
+	font-size: 12px;
+	transition: color 0.2s;
+	border-radius: 4px;
+}
+
+.copy-btn:hover {
+	color: var(--accent-color);
+	background-color: rgba(0, 122, 255, 0.1);
+}
+
+/* 新しいカラー入力行のスタイル */
+.color-input-row {
+	display: flex;
+	align-items: center;
+	margin-bottom: 8px;
+	gap: 8px;
+}
+
+.color-label {
+	width: 20px;
+	font-weight: 500;
+	color: var(--text-secondary);
+	text-align: center;
+	font-size: 14px;
+}
+
+.color-number-input {
+	width: 50px;
+	padding: 4px 6px;
+	border: var(--input-border);
+	border-radius: var(--input-border-radius);
+	background-color: var(--input-bg);
+	font-size: 14px;
+	text-align: center;
+}
+
+/* 数字入力欄のスピナー（上下ボタン）を非表示にする */
+.color-number-input::-webkit-inner-spin-button,
+.color-number-input::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.color-number-input {
+	-moz-appearance: textfield;
+}
+
+/* スライダーの基本スタイル */
+.slider {
+	flex: 1;
+	height: 8px;
+	-webkit-appearance: none;
+	appearance: none;
+	border-radius: 8px;
+	outline: none;
+	margin: 0 9px;
+}
+
+.slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: white;
+	border: 1px solid #ccc;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.slider::-moz-range-thumb {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: white;
+	border: 1px solid #ccc;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	-moz-appearance: none;
+}
+
+.slider::-moz-range-track {
+	height: 8px;
+	border-radius: 4px;
+	border: none;
+	outline: none;
+}
+
+/* RGB スライダー */
+.r-slider {
+	background: linear-gradient(to right, #000, #f00);
+	background-size: calc(100% - 18px) 100%;
+	background-position: 9px center;
+	background-repeat: no-repeat;
+}
+
+.g-slider {
+	background: linear-gradient(to right, #000, #0f0);
+	background-size: calc(100% - 18px) 100%;
+	background-position: 9px center;
+	background-repeat: no-repeat;
+}
+
+.b-slider {
+	background: linear-gradient(to right, #000, #00f);
+	background-size: calc(100% - 18px) 100%;
+	background-position: 9px center;
+	background-repeat: no-repeat;
+}
+
+/* HSL スライダー */
+.h-slider {
+	background: linear-gradient(
+		to right,
+		#ff0000,
+		#ffff00,
+		#00ff00,
+		#00ffff,
+		#0000ff,
+		#ff00ff,
+		#ff0000
+	);
+	background-size: calc(100% - 18px) 100%;
+	background-position: 9px center;
+	background-repeat: no-repeat;
+}
+
+.s-slider {
+	background: linear-gradient(to right, #808080, #ff0000);
+	background-size: calc(100% - 18px) 100%;
+	background-position: 9px center;
+	background-repeat: no-repeat;
+}
+
+.l-slider {
+	background: linear-gradient(to right, #000000, #808080, #ffffff);
+	background-size: calc(100% - 18px) 100%;
+	background-position: 9px center;
+	background-repeat: no-repeat;
+}
+
+/* HSV スライダー */
+.hv-slider {
+	background: linear-gradient(
+		to right,
+		#ff0000,
+		#ffff00,
+		#00ff00,
+		#00ffff,
+		#0000ff,
+		#ff00ff,
+		#ff0000
+	);
+	background-size: calc(100% - 18px) 100%;
+	background-position: 9px center;
+	background-repeat: no-repeat;
+}
+
+.sv-slider {
+	background: linear-gradient(to right, #ffffff, #ff0000);
+	background-size: calc(100% - 18px) 100%;
+	background-position: 9px center;
+	background-repeat: no-repeat;
+}
+
+.v-slider {
+	background: linear-gradient(to right, #000000, #ff0000);
+	background-size: calc(100% - 18px) 100%;
+	background-position: 9px center;
+	background-repeat: no-repeat;
+}
+
+/* カラー履歴 */
+.color-history {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 10px;
+}
+
+.color-history-item {
+	width: 30px;
+	height: 30px;
+	border-radius: 4px;
+	cursor: pointer;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s;
+}
+
+.color-history-item:hover {
+	transform: scale(1.1);
+}
+
+/* カラーパレット */
+.color-palette {
+	margin-top: 20px;
+}
+
+.palette-container {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+	gap: 0;
+	border-radius: 8px;
+	overflow: hidden;
+	max-width: 500px;
+}
+
+.palette-color {
+	width: 50px;
+	height: 50px;
+	cursor: pointer;
+	box-shadow: none;
+	transition: transform 0.2s;
+}
+
+.palette-color:hover {
+	transform: scale(1.1);
+	z-index: 2;
+	border: 1px solid #ffffff;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 画像履歴 */
+.image-history {
+	display: flex;
+	gap: 15px;
+	overflow-x: auto;
+	padding: 10px 0;
+}
+
+.history-item {
+	width: 120px;
+	height: 80px;
+	border-radius: 8px;
+	overflow: hidden;
+	cursor: pointer;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s;
+}
+
+.history-item:hover {
+	transform: scale(1.05);
+}
+
+.history-item img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* パネルフッター */
+.panel-footer {
+	margin-top: 15px;
+	display: flex;
+	justify-content: flex-end;
+}
+
+.btn {
+	background-color: rgba(255, 255, 255, 0.9);
+	color: black;
+	border: none;
+	padding: 8px 16px;
+	border-radius: 8px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+	cursor: pointer;
+	font-size: 14px;
+	transition: background-color 0.2s;
+}
+
+.btn:hover {
+	background-color: var(--btn-hover);
+	color: white;
+}
+
+/* 画像クリア用のバツボタン */
+.close-image-btn {
+	position: absolute;
+	top: 0;
+	right: 0;
+	transform: translate(50%, -50%);
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background-color: rgba(255, 255, 255, 0.9);
+	border: 2px solid #fff;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.close-image-btn:hover {
+	background-color: rgba(255, 0, 0, 0.8);
+	color: white;
+	transform: translate(50%, -50%) scale(1.1);
+}
+
+.close-image-btn i {
+	font-size: 18px;
+}
+
+/* 通知 */
+.notification {
+	position: fixed;
+	bottom: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	background-color: rgba(0, 0, 0, 0.8);
+	color: white;
+	padding: 10px 20px;
+	border-radius: 8px;
+	z-index: 100;
+	transition: opacity 0.3s, transform 0.3s;
+	max-width: 80%;
+	text-align: center;
+}
+
+.notification.hidden {
+	opacity: 0;
+	transform: translateX(-50%) translateY(20px);
+}
+
+.notification.success {
+	background-color: rgba(38, 191, 125, 0.9);
+}
+
+.notification.error {
+	background-color: rgba(250, 25, 25, 0.9);
+}
+
+.notification.info {
+	background-color: rgba(255, 185, 0, 0.9);
+	color: black;
+}
+
+/* カラーピッカー入力 */
+.color-picker-input {
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
+	padding: 0;
+	margin: 0;
+	pointer-events: none;
+}
+
+.color-preview::after {
+	font-family: "Font Awesome 6 Free", sans-serif;
+	font-weight: 900;
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
+	font-size: 12px;
+	color: white;
+	background-color: rgba(0, 0, 0, 0.3);
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+
+.color-preview:hover::after {
+	opacity: 1;
+}
